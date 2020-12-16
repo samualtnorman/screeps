@@ -1,4 +1,4 @@
-import { processes } from ".."
+import { processes } from "../processes"
 import { info } from "../../utils"
 
 export * from "./Creep"

@@ -1,5 +1,6 @@
 import { info, warn } from "./utils"
-import { processes, processQueue } from "./processes"
+import { processQueue } from "./processes/processQueue"
+import { processes } from "./processes/processes"
 import { sourceMappedStackTrace, wrapFunction } from "./lib"
 
 export function loop() {

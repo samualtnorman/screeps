@@ -1,4 +1,4 @@
-import { addProcess, runProcess } from ".."
+import { addProcess, runProcess } from "../runProcess"
 import { returns, warn } from "../../utils"
 
 export function* Creep(name: string) {
