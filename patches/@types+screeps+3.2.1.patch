@@ -1,0 +1,40 @@
+diff --git a/node_modules/@types/screeps/index.d.ts b/node_modules/@types/screeps/index.d.ts
+index 8e91e20..6eda581 100644
+--- a/node_modules/@types/screeps/index.d.ts
++++ b/node_modules/@types/screeps/index.d.ts
+@@ -4721,7 +4721,9 @@ interface StructureSpawn extends OwnedStructure<STRUCTURE_SPAWN> {
+      * ERR_RCL_NOT_ENOUGH       -14 Your Room Controller level is insufficient to use this spawn.
+      * ```
+      */
+-    spawnCreep(body: BodyPartConstant[], name: string, opts?: SpawnOptions): ScreepsReturnCode;
++    spawnCreep: keyof CreepMemory extends undefined
++        ? (body: BodyPartConstant[], name: string, opts?: SpawnOptions) => ScreepsReturnCode
++        : (body: BodyPartConstant[], name: string, opts: SpawnOptions) => ScreepsReturnCode;
+ 
+     /**
+      * Destroy this spawn immediately.
+@@ -4808,11 +4810,19 @@ interface Spawning {
+ /**
+  * An object with additional options for the spawning process.
+  */
+-interface SpawnOptions {
+-    /**
+-     * Memory of the new creep. If provided, it will be immediately stored into Memory.creeps[name].
+-     */
+-    memory?: CreepMemory;
++type SpawnOptions = (keyof CreepMemory extends never
++    ? {
++        /**
++         * Memory of the new creep. If provided, it will be immediately stored into Memory.creeps[name].
++         */
++        memory?: CreepMemory;
++    } : {
++        /**
++         * Memory of the new creep. If provided, it will be immediately stored into Memory.creeps[name].
++         */
++        memory: CreepMemory;
++    }
++) & {
+     /**
+      * Array of spawns/extensions from which to draw energy for the spawning process.
+      * Structures will be used according to the array order.

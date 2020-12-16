@@ -1,3 +1,3 @@
 interface CreepMemory {
-	origin?: string
+	origin: string
 }

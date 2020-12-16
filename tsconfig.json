@@ -9,6 +9,7 @@
 		"strict": true,
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
-		"allowUnreachableCode": false
+		"allowUnreachableCode": false,
+		"noFallthroughCasesInSwitch": true
 	}
 }
