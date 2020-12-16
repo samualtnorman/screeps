@@ -1,5 +1,6 @@
 import { processes } from "../processes"
 import { info } from "../../utils"
+import { wait } from "./wait"
 
 export * from "./Creep"
 export * from "./Spawn"
@@ -13,13 +14,6 @@ export function* memoryCleaner() {
 			if (!(name in Game.creeps))
 				delete Memory.creeps[name]
 	}
-}
-
-export function* wait(ticks: number) {
-	const end = Game.time + Math.max(ticks, 1)
-
-	while(Game.time < end)
-		yield
 }
 
 export function* pixelGenerator() {

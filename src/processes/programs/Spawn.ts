@@ -1,4 +1,5 @@
-import { wait, Creep } from "."
+import { Creep } from "./Creep"
+import { wait } from "./wait"
 import { addProcess, runProcess } from "../runProcess"
 import { returns, warn } from "../../utils"
 
