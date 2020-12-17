@@ -1,6 +1,7 @@
 import { info, warn } from "./utils"
 import { sourceMappedStackTrace } from "./lib"
-import { Creep, memoryCleaner, pixelGenerator, Room, Spawn, processQueue, processes, addProcess } from "./programs"
+import { Creep, memoryCleaner, pixelGenerator, Room, Spawn } from "./programs"
+import { processQueue, processes, addProcess } from "./kernel"
 
 for (const name in Game.rooms)
 	addProcess(Room(name))

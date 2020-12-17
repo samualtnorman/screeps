@@ -1,6 +1,7 @@
 import { Creep } from "./Creep"
-import { wait, addProcess, runProcess } from "./shared"
+import { wait } from "./shared"
 import { returns, warn } from "../utils"
+import { addProcess, runProcess } from "../kernel"
 
 export function* Spawn(name: string) {
 	let spawn

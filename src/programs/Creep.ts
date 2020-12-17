@@ -1,4 +1,4 @@
-import { addProcess, runProcess } from "./shared"
+import { addProcess, runProcess } from "../kernel"
 import { returns, warn } from "../utils"
 
 export function* Creep(name: string) {
