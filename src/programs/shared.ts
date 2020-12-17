@@ -1,10 +1,18 @@
-import { processes } from "../processes"
-import { info } from "../../utils"
-import { wait } from "./wait"
+import { info } from "../utils"
 
-export * from "./Creep"
-export * from "./Spawn"
-export * from "./Room"
+export const processes = new Set<Generator>();
+export const processQueue: Generator[] = [];
+
+export function runProcess(process: Generator) {
+	processes.add(process);
+
+	if (!processQueue.includes(process))
+		processQueue.push(process);
+}
+
+export function addProcess(process: Generator) {
+	processes.add(process);
+}
 
 export function* memoryCleaner() {
 	while (true) {
@@ -35,4 +43,11 @@ export function* processCountLogger() {
 
 		info(`there are ${processes.size} processes`)
 	}
+}
+
+export function* wait(ticks: number) {
+	const end = Game.time + Math.max(ticks, 1)
+
+	while (Game.time < end)
+		yield
 }

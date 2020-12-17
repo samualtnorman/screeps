@@ -1,7 +1,21 @@
 import { info, warn } from "./utils"
-import { processQueue } from "./processes/processQueue"
-import { processes } from "./processes/processes"
-import { sourceMappedStackTrace, wrapFunction } from "./lib"
+import { sourceMappedStackTrace } from "./lib"
+import { Creep, memoryCleaner, pixelGenerator, Room, Spawn, processQueue, processes, addProcess } from "./programs"
+
+for (const name in Game.rooms)
+	addProcess(Room(name))
+
+for (const name in Game.creeps)
+	addProcess(Creep(name))
+
+for (const name in Game.spawns)
+	addProcess(Spawn(name))
+
+addProcess(memoryCleaner())
+addProcess(pixelGenerator())
+// addProcess(programs.processCount())
+
+info(`started ${processes.size} processes`)
 
 export function loop() {
 	const { size } = processes

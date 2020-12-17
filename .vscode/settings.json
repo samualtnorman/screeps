@@ -33,7 +33,8 @@
 		"test": true,
 		"rollup.config.js": true,
 		"screeps.json": true,
-		"tsconfig.test.json": true
+		"tsconfig.test.json": true,
+		"patches": true
 	},
 	"typescript.tsdk": "./node_modules/typescript/lib"
 }

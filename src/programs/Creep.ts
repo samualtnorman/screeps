@@ -1,5 +1,5 @@
-import { addProcess, runProcess } from "../runProcess"
-import { returns, warn } from "../../utils"
+import { addProcess, runProcess } from "./shared"
+import { returns, warn } from "../utils"
 
 export function* Creep(name: string) {
 	const creep = Game.creeps[name]
