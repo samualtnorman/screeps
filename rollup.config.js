@@ -15,11 +15,14 @@ else if (!(config = require("./screeps.json")[DEST]))
 	throw new Error("Invalid upload destination")
 
 export default {
-	input: "src/main.ts",
+	input: "./src/main.ts",
 	output: {
-		file: "dist/main.js",
+		file: "./dist/main.js",
 		format: "cjs",
-		sourcemap: true
+		sourcemap: true,
+		sourcemapPathTransform(relativeSourcePath) {
+			return relativeSourcePath.slice(3)
+		}
 	},
 	plugins: [
 		resolve(),

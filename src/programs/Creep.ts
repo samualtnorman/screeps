@@ -1,20 +1,18 @@
-import { addProcess, runProcess } from "../kernel"
-import { returns, warn } from "../utils"
+import { addProcess, runProcess, stop } from "../kernel"
+import { logReturnCode, ticks, warn } from "../utils"
 
 export function* Creep(name: string) {
 	const creep = Game.creeps[name]
 
 	if (creep.store.getUsedCapacity() > creep.store.getCapacity() / 2)
-		runProcess(Creep.deposit(name))
+		runProcess(Creep.deposit(creep))
 	else
-		runProcess(Creep.deposit(name))
+		runProcess(Creep.deposit(creep))
 }
 
 export namespace Creep {
 	export function* startHarvest(name: string) {
-		let creep
-
-		while (creep = Game.creeps[name]) {
+		for (const creep of ticks(Game.creeps[name])) {
 			const source = creep.pos.findClosestByPath(FIND_SOURCES)
 
 			if (source) {
@@ -25,14 +23,23 @@ export namespace Creep {
 						runProcess(harvest(name, source.id))
 						return
 
-					case ERR_NOT_IN_RANGE:
-						creep.moveTo(source)
-						break
+					case ERR_NOT_IN_RANGE: {
+						const returnCode = creep.moveTo(source)
+
+						switch (returnCode) {
+							case OK:
+								break
+
+							default:
+								logReturnCode(returnCode)
+						}
+					} break
 
 					default:
-						warn(returns[returnCode])
+						logReturnCode(returnCode)
 				}
-			}
+			} else
+				warn("no source")
 
 			yield
 		}
@@ -48,23 +55,23 @@ export namespace Creep {
 			switch (returnCode) {
 				case OK:
 					if (!creep.store.getFreeCapacity()) {
-						addProcess(deposit(name))
+						addProcess(deposit(creep))
 						return
 					}
 
 					break
 				default:
-					warn(returns[returnCode])
+					logReturnCode(returnCode)
 			}
 
 			yield
 		}
 	}
 
-	export function* deposit(name: string) {
-		let creep = Game.creeps[name] as Creep | undefined
+	export function* deposit(creep_: Creep) {
+		for (const creep of ticks(creep_)) {
+			const { name } = creep
 
-		if (creep) {
 			let target: Structure | undefined = creep.room.controller
 
 			for (const spawn of creep.room.find(FIND_MY_SPAWNS)) {
@@ -79,13 +86,25 @@ export namespace Creep {
 				return
 			}
 
-			while (creep = Game.creeps[name]) {
+			const creep_ = creep
+
+			for (const creep of ticks(creep_)) {
 				const returnCode = creep.transfer(target, RESOURCE_ENERGY)
 
 				switch (returnCode) {
-					case ERR_NOT_IN_RANGE:
-						creep.moveTo(target)
-						break
+					case ERR_NOT_IN_RANGE: {
+						yield* waitFatigue(creep)
+
+						const returnCode = creep.moveTo(target)
+
+						switch (returnCode) {
+							case OK:
+								break
+
+							default:
+								logReturnCode(returnCode)
+						}
+					} break
 
 					case OK:
 						if (!creep.store.getUsedCapacity()) {
@@ -103,11 +122,25 @@ export namespace Creep {
 						return
 
 					default:
-						warn(returns[returnCode])
+						logReturnCode(returnCode)
 				}
 
 				yield
 			}
+
+			break
 		}
+	}
+
+	export function*  waitFatigue(creep_: Creep) {
+		for (const creep of ticks(creep_)) {
+			if (!creep.fatigue)
+				return
+
+			yield
+		}
+
+		stop()
+		yield
 	}
 }

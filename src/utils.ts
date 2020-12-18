@@ -1,4 +1,5 @@
-import { MapD } from "./lib"
+import { mapError } from "./error-mapper"
+import { DynamicMap, cssFunction, lerp, matches } from "./lib"
 
 export const returns = {
 	0: "ok",
@@ -18,33 +19,54 @@ export const returns = {
 	[-15]: "GCL not enough",
 }
 
-export function log(message: string, red: number, green: number, blue: number) {
-	const [ , type, functionName ] = getCallstack()
-	const [ colourString, lightColourString ] = log.colourCache.getD([ red, green, blue ].join())
+export function log(
+	message: string,
+	{
+		notify,
+		colour: [ red, green, blue ] = [ 255, 255, 255 ],
+		callstackSkips = 2,
+		location = false,
+		type = "log"
+	}: {
+		notify?: number,
+		colour?: [ number, number, number ],
+		callstackSkips?: number,
+		location?: boolean,
+		type?: string
+	} = {}
+) {
+	const [ { name: functionName, location: location_ } ] = getCallstack().slice(callstackSkips)
+	const [ colourString, lightColourString ] = log.colourCache.get([ red, green, blue ].join())
 
-	console.log(`[${Game.time}] ${colour(`[${type}]`, colourString)} ${colour(`${functionName}:`, "grey")}\t${colour(message, lightColourString)}`)
+	message = `[${Game.time}] ${colour(`[${type}]`, colourString)} ${colour(`${functionName}:`, "grey")}\t${colour(message, lightColourString)}`
+
+	if (location)
+		message += `\t${location_}`
+
+	if (notify != undefined)
+		Game.notify(message, notify)
+
+	console.log(message)
 }
 
 export namespace log {
-	export const colourCache = new MapD<string, [ string, string ]>(key => {
+	export const colourCache = new DynamicMap<string, [ string, string ]>(key => {
 		const [ red, green, blue ] = key.split(",").map(Number)
 
 		return [ cssFunction("rgb", red, green, blue), cssFunction("rgb", lerp(red, 0.4, 255), lerp(green, 0.4, 255), lerp(blue, 0.4, 255)) ]
 	})
 }
 
-export function info(message: string) {
-	log(message, 0, 128, 0)
+export function info(...message: string[]) {
+	log(message.join(" "), { colour: [ 0, 128, 0 ], type: "info" })
 }
 
-export function warn(message: string) {
-	Game.notify(message, 60 * 8)
-	log(message, 255, 165, 0)
+export function warn(...message: string[]) {
+	log(message.join(" "), { notify: 60 * 8, colour: [ 255, 165, 0 ], type: "warn" })
 }
 
-export function error(message: string) {
-	Game.notify(message, 60)
-	log(message, 255, 0, 0)
+export function error(...message: string[]) {
+	log(message.join(" "), { notify: 60, colour: [ 0, 128, 0 ], type: "error" })
 }
 
 export function colour(message: string, colour: string) {
@@ -52,13 +74,23 @@ export function colour(message: string, colour: string) {
 }
 
 export function getCallstack() {
-	return new Error().stack!.split("\n").slice(2).map(a => a.split(/\s+/)[2].split(".").pop())
+	return parseCallstack(mapError(new Error().stack!)).slice(1)
 }
 
-export function cssFunction(name: string, ...args: (boolean | number | string)[]) {
-	return `${name}(${args.join(", ")})`
+export function logReturnCode(returnCode: ScreepsReturnCode) {
+	log(returns[returnCode], { notify: 60 * 8, colour: [ 255, 165, 0 ], location: true, type: "warn" })
 }
 
-export function lerp(start: number, amount: number, end: number) {
-	return (1 - amount) * start + amount * end
+export function parseCallstack(stack: string) {
+	return stack.split("\n").slice(1).map(line => ({
+		name: line.split(/\s+/)[2],
+		location: [ ...matches(/\(([^(]+?)\)/, line) ][0]?.[1]
+	}))
+}
+
+export function* ticks<O extends { id: Id<O> }, R = O>({ id }: O, callback?: (object: O) => R) {
+	let object
+
+	while (object = Game.getObjectById(id))
+		yield callback ? callback(object) : object
 }
