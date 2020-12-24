@@ -1,5 +1,5 @@
 import { mapError } from "./error-mapper"
-import { DynamicMap, cssFunction, lerp, matches } from "./lib"
+import { DynamicMap, cssFunction, lerp, matches, arrayExcludes } from "./lib"
 
 export const returns = {
 	0: "ok",
@@ -88,9 +88,29 @@ export function parseCallstack(stack: string) {
 	}))
 }
 
-export function* ticks<O extends { id: Id<O> }, R = O>({ id }: O, callback?: (object: O) => R) {
-	let object
+export function ticks<A>(objects: A): Generator<A, void, unknown>
+export function ticks<A, B>(object0: A, object1: B): Generator<[ A, B ], void, unknown>
+export function ticks<A, B, C>(object0: A, object1: B, object2: C): Generator<[ A, B, C ], void, unknown>
+export function* ticks<O extends { id: Id<O> }>(...objects: O[]) {
+	if (objects.length == 1) {
+		const [ { id } ] = objects
 
-	while (object = Game.getObjectById(id))
-		yield callback ? callback(object) : object
+		let object
+
+		while (object = Game.getObjectById(id))
+			yield object
+	} else {
+		while (true) {
+			let freshObjects = objects.map(({ id }) => Game.getObjectById(id))
+
+			if (!arrayExcludes(freshObjects, null))
+				return
+
+			yield freshObjects
+		}
+	}
+}
+
+export function update<O extends { id: Id<O> }>({ id }: O) {
+	return Game.getObjectById(id)
 }

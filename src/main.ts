@@ -1,7 +1,10 @@
+import {
+	Creep, Room, Spawn, memoryCleaner, pixelGenerator, test
+} from "./programs"
+
+import { addProcess, processes, tick } from "./kernel"
 import { info } from "./utils"
 import { wrap } from "./error-mapper"
-import { Creep, memoryCleaner, pixelGenerator, Room, Spawn, test } from "./programs"
-import { processes, addProcess, tick } from "./kernel"
 
 for (const name in Game.rooms)
 	addProcess(Room(name))

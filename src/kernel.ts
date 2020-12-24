@@ -1,24 +1,38 @@
-import { mapError } from "./error-mapper"
 import { error, info, warn } from "./utils"
+import { mapError } from "./error-mapper"
 
-export const processes = new Set<Generator>()
-export const processQueue: Generator[] = []
+export type Process = Generator<YieldCode | void, void, void>
 
-let exit = false
-
-export function runProcess(process: Generator) {
-	processes.add(process)
-
-	if (!processQueue.includes(process))
-		processQueue.push(process)
+/**
+ * various codes the kernel recognises
+ *
+ * only works with the `yield` keyword, not `return`
+ */
+export enum YieldCode {
+	/**
+	 * runs the process again next tick
+	 */
+	OK,
+	/**
+	 * runs the process again in the same tick if possible
+	 */
+	Again,
+	/**
+	 * stops the process, useful within coroutines
+	 */
+	Stop
 }
 
-export function addProcess(process: Generator) {
+export const processes = new Set<Process>()
+export const processQueue: Process[] = []
+
+export function runProcess(process: Process) {
 	processes.add(process)
+	processQueue.push(process)
 }
 
-export function stop() {
-	exit = true
+export function addProcess(process: Process) {
+	processes.add(process)
 }
 
 export function tick() {
@@ -27,13 +41,15 @@ export function tick() {
 	if (size) {
 		let i = 0
 
-		// code that runs in between calls to loop() might be
-		// able to insert processes to run first in a tick
 		processQueue.push(...processes)
 
 		for (const process of processQueue) {
-			if (Game.cpu.getUsed() > Game.cpu.limit * (Game.cpu.bucket / 10000)) {
-				info(`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`)
+			if (
+				Game.cpu.getUsed() > Game.cpu.limit * (Game.cpu.bucket / 10000)
+			) {
+				info(
+					`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`
+				)
 				break
 			}
 
@@ -42,13 +58,21 @@ export function tick() {
 			try {
 				const { done, value } = process.next()
 
-				if (exit) {
-					exit = false
-				} else if (!done) {
-					processes.add(process)
+				if (!done) {
+					switch (value) {
+						default:
+						case YieldCode.OK:
+							processes.add(process)
+							break
 
-					if (value)
-						processQueue.push(process)
+						case YieldCode.Again:
+							processQueue.push(process)
+							break
+
+						case YieldCode.Stop:
+							process.return()
+							break
+					}
 				}
 			} catch (error_) {
 				error(`error running process:\n${_.escape(mapError(error_))}`)
@@ -56,8 +80,6 @@ export function tick() {
 
 			i++
 		}
-
-		processQueue.length = 0
 	} else
 		warn("no processes to run")
 }

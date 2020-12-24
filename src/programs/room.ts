@@ -1,4 +1,4 @@
-export function* Room(name: string) {
+export function* start(name: string) {
 	// let room
 
 	// while (room = Game.rooms[name]) {
@@ -6,8 +6,4 @@ export function* Room(name: string) {
 
 	// 	yield
 	// }
-}
-
-export namespace Room {
-
 }

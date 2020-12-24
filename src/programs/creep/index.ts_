@@ -1,0 +1,202 @@
+import { addProcess, runProcess, YieldCode } from "../../kernel"
+import { logReturnCode, ticks, update, warn } from "../../utils"
+import { waitFatigue } from "./coroutines"
+
+export function* start(creep: Creep) {
+	if (creep.store.getUsedCapacity() > creep.store.getCapacity() / 2)
+		runProcess(startDeposit(creep))
+	else
+		runProcess(startHarvest(creep))
+}
+
+export function* startHarvest(creep: Creep) {
+	for (creep of ticks(creep)) {
+		let source = creep.pos.findClosestByPath(FIND_SOURCES)
+		yield YieldCode.Again
+
+		if (source) {
+			const returnCode = creep.harvest(source)
+			yield YieldCode.Again
+
+			switch (returnCode) {
+				case OK: {
+					yield
+
+					for (creep of ticks(creep)) {
+						source = update(source)
+
+						if (!source)
+							break
+
+						const returnCode = creep.harvest(source)
+						yield YieldCode.Again
+
+						switch (returnCode) {
+							case OK: {
+								if (!creep.store.getFreeCapacity()) {
+									addProcess(startDeposit(creep))
+									return
+								}
+
+							} break
+
+							default:
+								logReturnCode(returnCode)
+						}
+
+						yield
+					} break
+				}
+
+				case ERR_NOT_IN_RANGE: {
+					const returnCode = creep.moveTo(source)
+
+					switch (returnCode) {
+						case OK:
+							break
+
+						default:
+							logReturnCode(returnCode)
+					}
+				} break
+
+				default:
+					logReturnCode(returnCode)
+			}
+		} else
+			warn(`${creep.name}: no source`)
+
+		yield
+	}
+}
+
+export function* harvestSource(creep: Creep, source_: Source) {
+	for (creep of ticks(creep)) {
+		const source = update(source_)
+
+		if (!source) {
+			runProcess(startHarvest(creep))
+			return
+		}
+
+		const returnCode = creep.harvest(source)
+
+		switch (returnCode) {
+			case OK: {
+				if (!creep.store.getFreeCapacity()) {
+					addProcess(startDeposit(creep))
+					return
+				}
+			} break
+
+			default:
+				logReturnCode(returnCode)
+		}
+
+		yield
+	}
+}
+
+export function* startDeposit(creep: Creep) {
+	for (creep of ticks(creep)) {
+		let target: Structure | undefined = creep.room.controller
+
+		for (const spawn of creep.room.find(FIND_MY_SPAWNS))
+			if (spawn.store.getFreeCapacity(RESOURCE_ENERGY)) {
+				target = spawn
+				break
+			}
+
+		if (!target) {
+			warn(`${creep.name}: no target`)
+
+			return
+		}
+
+		loop:
+		for (creep of ticks(creep)) {
+			const returnCode = creep.transfer(target, RESOURCE_ENERGY)
+
+			switch (returnCode) {
+				case ERR_NOT_IN_RANGE: {
+					yield* waitFatigue(creep)
+
+					const returnCode = creep.moveTo(target)
+
+					switch (returnCode) {
+						case OK:
+							break
+
+						default:
+							logReturnCode(returnCode)
+					}
+				} break
+
+				case OK:
+					if (!creep.store.getUsedCapacity()) {
+						runProcess(startHarvest(creep))
+						return
+					}
+
+					break
+
+				case ERR_NOT_ENOUGH_ENERGY:
+					runProcess(startHarvest(creep))
+					return
+
+				case ERR_FULL:
+					break loop
+
+				default:
+					logReturnCode(returnCode)
+			}
+
+			yield
+		}
+
+		yield
+	}
+}
+
+export function* deposit(creep: Creep, target: Structure) {
+	for (creep of ticks(creep)) {
+		const returnCode = creep.transfer(target, RESOURCE_ENERGY)
+
+		switch (returnCode) {
+			case ERR_NOT_IN_RANGE: {
+				yield* waitFatigue(creep)
+
+				const returnCode = creep.moveTo(target)
+
+				switch (returnCode) {
+					case OK:
+						break
+
+					default:
+						logReturnCode(returnCode)
+				}
+			} break
+
+			case OK:
+				if (!creep.store.getUsedCapacity()) {
+					runProcess(startHarvest(creep))
+					return
+				}
+
+				break
+
+			case ERR_NOT_ENOUGH_ENERGY:
+				runProcess(startHarvest(creep))
+				return
+
+			case ERR_FULL:
+				runProcess(startDeposit(creep))
+				return
+
+			default:
+				logReturnCode(returnCode)
+		}
+
+		yield
+	}
+}

@@ -66,7 +66,10 @@ export class DynamicMap<K, V> extends Map<K, V> {
 	}
 }
 
-export class DynamicWeakMap<K extends object, V> extends WeakMap<K, V> {
+export class DynamicWeakMap<
+	K extends Record<string, unknown>,
+	V
+> extends WeakMap<K, V> {
 	constructor(private fallbackHandler: (key: K) => V) { super() }
 
 	get(key: K) {
@@ -86,18 +89,10 @@ export class DynamicWeakMap<K extends object, V> extends WeakMap<K, V> {
 export type TypeGuard<A, B extends A> = (x: A) => x is B
 
 export class CustomError extends Error {
-	name = this.constructor.name;
-
-	constructor(message: string) {
-		super(message);
-	}
+	name = this.constructor.name
 }
 
-export class AssertError extends CustomError {
-	constructor(message: string) {
-		super(message);
-	}
-}
+export class AssertError extends CustomError {}
 
 export function assert(value: any): asserts value
 
@@ -135,7 +130,9 @@ export function assert(value: any, ...guards: Array<TypeGuard<any, any>>) {
 	if (guards.length) {
 		for (const guard of guards)
 			if (!guard(value))
-				throw new AssertError(`${guard.name || "assertion"} failed: got ${getType(value)}`)
+				throw new AssertError(
+					`${guard.name || "assertion"} failed: got ${getType(value)}`
+				)
 	} else if (!value)
 		throw new AssertError(`assertion failed: got ${getType(value)}`)
 }
@@ -191,4 +188,8 @@ export function* matches(regex: RegExp, string: string) {
 			while (match = regex.exec(string))
 				yield match
 	}
+}
+
+export function arrayExcludes<V, T extends V>(array: V[], value: T): array is Exclude<V, T>[] {
+	return !array.includes(value)
 }

@@ -1,9 +1,10 @@
-import { processes } from "../kernel"
 import { info } from "../utils"
+import { processes } from "../kernel"
+import { wait } from "./coroutines"
 
-export * from "./Creep"
-export * from "./Room"
-export * from "./Spawn"
+export * as creep from "./creep/index.ts_"
+export * as room from "./room"
+export * as spawn from "./spawn"
 
 export function* memoryCleaner() {
 	while (true) {
@@ -16,22 +17,21 @@ export function* memoryCleaner() {
 }
 
 export function* pixelGenerator() {
-	yield
+	yield* wait(1)
 
 	while (true) {
 		if (Game.cpu.bucket == 10000) {
 			Game.cpu.generatePixel()
-
 			info("generated a pixel")
-
-			yield
 		} else {
 			const ticks = Math.round((10000 - Game.cpu.bucket) / Game.cpu.limit)
 
 			info(`waiting ${ticks} ticks (bucket: ${Game.cpu.bucket})`)
 
-			yield* wait(ticks)
+			yield* wait(ticks || 1)
 		}
+
+		yield
 	}
 }
 
@@ -41,13 +41,6 @@ export function* processCountLogger() {
 
 		info(`there are ${processes.size} processes`)
 	}
-}
-
-export function* wait(ticks: number) {
-	const end = Game.time + Math.max(ticks, 1)
-
-	while (Game.time < end)
-		yield
 }
 
 export function* test() {
