@@ -1,6 +1,6 @@
 import { info } from "./utils"
 import { wrap } from "./error-mapper"
-import { Creep, memoryCleaner, pixelGenerator, Room, Spawn, test } from "./programs"
+import { Creep, memoryCleaner, pixelGenerator, Room, Spawn } from "./programs"
 import { processes, addProcess, tick } from "./kernel"
 
 for (const name in Game.rooms)
@@ -14,8 +14,8 @@ for (const name in Game.spawns)
 
 addProcess(memoryCleaner())
 addProcess(pixelGenerator())
-// addProcess(programs.processCount())
-addProcess(test())
+
+console.log("foo")
 
 info(`started ${processes.size} processes`)
 

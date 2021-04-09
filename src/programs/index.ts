@@ -49,7 +49,3 @@ export function* wait(ticks: number) {
 	while (Game.time < end)
 		yield
 }
-
-export function* test() {
-
-}

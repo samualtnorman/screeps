@@ -1,13 +1,17 @@
 import { mapError } from "./error-mapper"
 import { error, info, warn } from "./utils"
 
+/** holds currently active processes */
 export const processes = new Set<Generator>()
+
+/** holds processes to be run */
 export const processQueue: Generator[] = []
 
+/** when true, the current process the kernel is running will be terminated */
 let exit = false
 
 export function runProcess(process: Generator) {
-	processes.add(process)
+	addProcess(process)
 
 	if (!processQueue.includes(process))
 		processQueue.push(process)
@@ -27,24 +31,24 @@ export function tick() {
 	if (size) {
 		let i = 0
 
-		// code that runs in between calls to loop() might be
-		// able to insert processes to run first in a tick
+		processQueue.length = 0
+
 		processQueue.push(...processes)
 
 		for (const process of processQueue) {
-			if (Game.cpu.getUsed() > Game.cpu.limit * (Game.cpu.bucket / 10000)) {
-				info(`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`)
+			// when the bucket is full, we use all of our CPU (and a little bit of the bucket)
+			// when the bucket is half full, we use half of the CPU, and the rest goes towards the bucket
+			if (Game.cpu.getUsed() > Game.cpu.limit * (Game.cpu.bucket / 10000))
 				break
-			}
 
 			processes.delete(process)
+
+			exit = false
 
 			try {
 				const { done, value } = process.next()
 
-				if (exit) {
-					exit = false
-				} else if (!done) {
+				if (!exit && !done) {
 					processes.add(process)
 
 					if (value)
@@ -57,7 +61,13 @@ export function tick() {
 			i++
 		}
 
-		processQueue.length = 0
+		info(`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`)
 	} else
 		warn("no processes to run")
 }
+
+Object.defineProperty(global, "listProcesses", {
+	get() {
+
+	}
+})

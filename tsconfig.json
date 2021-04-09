@@ -10,6 +10,7 @@
 		"experimentalDecorators": true,
 		"allowSyntheticDefaultImports": true,
 		"allowUnreachableCode": false,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
+		"allowUmdGlobalAccess": true
 	}
 }

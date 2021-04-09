@@ -1,7 +1,7 @@
 import { mapError } from "./error-mapper"
 import { DynamicMap, cssFunction, lerp, matches } from "./lib"
 
-export const returns = {
+export const Returns = {
 	0: "ok",
 	[-1]: "not owner",
 	[-2]: "no path",
@@ -78,7 +78,7 @@ export function getCallstack() {
 }
 
 export function logReturnCode(returnCode: ScreepsReturnCode) {
-	log(returns[returnCode], { notify: 60 * 8, colour: [ 255, 165, 0 ], location: true, type: "warn" })
+	log(Returns[returnCode], { notify: 60 * 8, colour: [ 255, 165, 0 ], location: true, type: "warn" })
 }
 
 export function parseCallstack(stack: string) {

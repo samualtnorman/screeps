@@ -1,5 +1,5 @@
 import { wait, Creep } from "."
-import { returns, warn } from "../utils"
+import { Returns, warn } from "../utils"
 import { addProcess, runProcess } from "../kernel"
 
 export function* Spawn(name: string) {
@@ -25,7 +25,7 @@ export function* Spawn(name: string) {
 					return
 
 				default:
-					warn(returns[returnCode])
+					warn(Returns[returnCode])
 			}
 		}
 
