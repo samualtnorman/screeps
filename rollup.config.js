@@ -1,38 +1,36 @@
-"use strict"
-
-// import resolve from "@rollup/plugin-node-resolve"
-// import commonjs from "@rollup/plugin-commonjs"
-// import typescript from "@rollup/plugin-typescript"
+import babel from "@rollup/plugin-babel"
+import commonJS from "@rollup/plugin-commonjs"
+import json from "@rollup/plugin-json"
+import nodeResolve from "@rollup/plugin-node-resolve"
 import screeps from "rollup-plugin-screeps"
 
-let config
+/** @typedef {import("rollup").RollupOptions} RollupOptions */
 
-const { DEST } = process.env
-
-if (!DEST)
-	console.log("No destination specified - code will be compiled but not uploaded")
-else if (!(config = require("./screeps.json")[DEST])) {
-	console.log("Invalid upload destination")
-	process.exit()
-}
-
-export default {
-	input: "./src/main.ts",
+/** @type {RollupOptions} */
+const config = {
+	input: "src/main.ts",
 	output: {
-		file: "./dist/main.js",
+		file: "dist/main.js",
+		interop: "auto",
 		format: "cjs",
 		sourcemap: true,
-		sourcemapPathTransform(relativeSourcePath) {
-			return relativeSourcePath.slice(3)
-		}
+		sourcemapPathTransform: relativeSourcePath => relativeSourcePath.slice(3),
+		intro: "{",
+		outro: "}",
+		generatedCode: "es2015",
+		esModule: false
 	},
 	plugins: [
-		// resolve(),
-		// commonjs(),
-		// typescript(),
-		// screeps({
-		// 	dryRun: true,//!config,
-		// 	config
-		// })
-	]
+		babel({
+			babelHelpers: "bundled",
+			extensions: [ ".ts" ]
+		}),
+		commonJS(),
+		json({ preferConst: true }),
+		nodeResolve({ extensions: [ ".ts" ], rootDir: "src" }),
+		screeps({ config: "./screeps.config.json" })
+	],
+	treeshake: { moduleSideEffects: "no-external" }
 }
+
+export default config

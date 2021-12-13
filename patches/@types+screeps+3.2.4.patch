@@ -1,8 +1,8 @@
 diff --git a/node_modules/@types/screeps/index.d.ts b/node_modules/@types/screeps/index.d.ts
-index 8e91e20..6eda581 100644
+index 3aafd3d..90039d9 100755
 --- a/node_modules/@types/screeps/index.d.ts
 +++ b/node_modules/@types/screeps/index.d.ts
-@@ -4721,7 +4721,9 @@ interface StructureSpawn extends OwnedStructure<STRUCTURE_SPAWN> {
+@@ -4726,7 +4726,9 @@ interface StructureSpawn extends OwnedStructure<STRUCTURE_SPAWN> {
       * ERR_RCL_NOT_ENOUGH       -14 Your Room Controller level is insufficient to use this spawn.
       * ```
       */
@@ -13,7 +13,7 @@ index 8e91e20..6eda581 100644
  
      /**
       * Destroy this spawn immediately.
-@@ -4808,11 +4810,19 @@ interface Spawning {
+@@ -4813,11 +4815,19 @@ interface Spawning {
  /**
   * An object with additional options for the spawning process.
   */
