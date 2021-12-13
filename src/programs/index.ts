@@ -1,9 +1,9 @@
 import { processes } from "../kernel"
-import { info } from "../utils"
+import { log } from "../utils"
 
-export * from "./Creep"
-export * from "./Room"
-export * from "./Spawn"
+export { Creep } from "./Creep"
+export { Room } from "./Room"
+export { Spawn } from "./Spawn"
 
 export function* memoryCleaner() {
 	while (true) {
@@ -22,13 +22,13 @@ export function* pixelGenerator() {
 		if (Game.cpu.bucket == 10000) {
 			Game.cpu.generatePixel()
 
-			info("generated a pixel")
+			log("generated a pixel")
 
 			yield
 		} else {
 			const ticks = Math.round((10000 - Game.cpu.bucket) / Game.cpu.limit)
 
-			info(`waiting ${ticks} ticks (bucket: ${Game.cpu.bucket})`)
+			log(`waiting ${ticks} ticks (bucket: ${Game.cpu.bucket})`)
 
 			yield* wait(ticks)
 		}
@@ -39,7 +39,7 @@ export function* processCountLogger() {
 	while (true) {
 		yield* wait(10)
 
-		info(`there are ${processes.size} processes`)
+		log(`there are ${processes.size} processes`)
 	}
 }
 

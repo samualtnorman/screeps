@@ -1,6 +1,6 @@
 import { wait, Creep } from "."
-import { Returns, warn } from "../utils"
-import { addProcess, runProcess } from "../kernel"
+import { Returns, log } from "../utils"
+import { runProcess, processes } from "../kernel"
 
 export function* Spawn(name: string) {
 	let spawn
@@ -21,11 +21,11 @@ export function* Spawn(name: string) {
 					break
 
 				case ERR_NOT_ENOUGH_ENERGY:
-					addProcess(Spawn.waitForEnergy(name))
+					processes.add(Spawn.waitForEnergy(name))
 					return
 
 				default:
-					warn(Returns[returnCode])
+					log.warn(Returns[returnCode])
 			}
 		}
 

@@ -1,5 +1,5 @@
-import { addProcess, runProcess, stop } from "../kernel"
-import { logReturnCode, ticks, warn } from "../utils"
+import { processes, runProcess, stop } from "../kernel"
+import { log, Returns, ticks } from "../utils"
 
 export function* Creep(name: string) {
 	const creep = Game.creeps[name]
@@ -31,15 +31,15 @@ export namespace Creep {
 								break
 
 							default:
-								logReturnCode(returnCode)
+								log.error(`#0 ${Returns[returnCode]}`)
 						}
 					} break
 
 					default:
-						logReturnCode(returnCode)
+						log.error(`#1 ${Returns[returnCode]}`)
 				}
 			} else
-				warn("no source")
+				log.warn("no source")
 
 			yield
 		}
@@ -55,13 +55,13 @@ export namespace Creep {
 			switch (returnCode) {
 				case OK:
 					if (!creep.store.getFreeCapacity()) {
-						addProcess(deposit(creep))
+						processes.add(deposit(creep))
 						return
 					}
 
 					break
 				default:
-					logReturnCode(returnCode)
+					log.error(`${HERE} ${Returns[returnCode]}`)
 			}
 
 			yield
@@ -82,7 +82,7 @@ export namespace Creep {
 			}
 
 			if (!target) {
-				warn(`${name}: no target`)
+				log.warn(`${name}: no target`)
 				return
 			}
 
@@ -102,7 +102,7 @@ export namespace Creep {
 								break
 
 							default:
-								logReturnCode(returnCode)
+								log.error(`${HERE} ${Returns[returnCode]}`)
 						}
 					} break
 
@@ -122,7 +122,7 @@ export namespace Creep {
 						return
 
 					default:
-						logReturnCode(returnCode)
+						log.error(`${HERE} ${Returns[returnCode]}`)
 				}
 
 				yield

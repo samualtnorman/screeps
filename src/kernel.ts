@@ -1,8 +1,8 @@
-import { mapError } from "./error-mapper"
-import { error, info, warn } from "./utils"
+import init from "./programs/init"
+import { log, mapError } from "./utils"
 
 /** holds currently active processes */
-export const processes = new Set<Generator>()
+export const processes = new Set<Generator>([ init() ])
 
 /** holds processes to be run */
 export const processQueue: Generator[] = []
@@ -11,14 +11,10 @@ export const processQueue: Generator[] = []
 let exit = false
 
 export function runProcess(process: Generator) {
-	addProcess(process)
+	processes.add(process)
 
 	if (!processQueue.includes(process))
 		processQueue.push(process)
-}
-
-export function addProcess(process: Generator) {
-	processes.add(process)
 }
 
 export function stop() {
@@ -26,6 +22,8 @@ export function stop() {
 }
 
 export function tick() {
+	log(`tick: ${Game.time}`)
+
 	const { size } = processes
 
 	if (size) {
@@ -55,19 +53,23 @@ export function tick() {
 						processQueue.push(process)
 				}
 			} catch (error_) {
-				error(`error running process:\n${_.escape(mapError(error_))}`)
+				log.error(`error running process:\n${_.escape(error_ instanceof Error ? mapError(error_) : String(error_))}`)
 			}
 
 			i++
 		}
 
-		info(`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`)
-	} else
-		warn("no processes to run")
+		log(`ran ${i} / ${size} processes (bucket: ${Game.cpu.bucket})`)
+	} else {
+		log.error("all the processes died")
+		processes.add(init())
+	}
 }
 
-Object.defineProperty(global, "listProcesses", {
-	get() {
+// Object.defineProperty(global, "listProcesses", {
+// 	get() {
+// 		console.log("hello")
+// 	}
+// })
 
-	}
-})
+// console.log(typeof global)
